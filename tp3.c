@@ -60,7 +60,10 @@ t_mot *ajouterMot(t_mot *liste, char *mot) {
 
 // Retire un mot
 t_mot *retirerMot(t_mot *liste, char *mot) {
-    if (liste == NULL) return NULL;
+    if (liste == NULL) {
+        printf("La liste est vide.\n");
+        return NULL;
+    }
 
     t_mot *buffer = liste;
     t_mot *prec = NULL;
@@ -70,23 +73,28 @@ t_mot *retirerMot(t_mot *liste, char *mot) {
         buffer = buffer->suivant;
     }
 
-    if (buffer == NULL) return liste; // mot pas trouvé
-
-    if (buffer->nombre_occurences > 1) {
-        buffer->nombre_occurences--;
+    if (buffer == NULL) {
+        printf("Mot \"%s\" n'est pas dans la liste.\n", mot);
         return liste;
     }
 
-    // Supprimer le mot
-    if (prec == NULL) {
-        liste = buffer->suivant;
+    if (buffer->nombre_occurences > 1) {
+        buffer->nombre_occurences--;
     } else {
-        prec->suivant = buffer->suivant;
+        // Suppression complète
+        if (prec == NULL) {
+            liste = buffer->suivant;
+        } else {
+            prec->suivant = buffer->suivant;
+        }
+        free(buffer->mot);
+        free(buffer);
     }
-    free(buffer->mot);
-    free(buffer);
+
+    printf("Mot \"%s\" supprimé.\n", mot);
     return liste;
 }
+
 
 // Affiche tous les mots
 void afficherMots(t_mot *liste) {
