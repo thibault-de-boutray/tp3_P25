@@ -1,0 +1,5 @@
+Bonjour    a   tous,
+
+Voici   un petit     test
+pour  verifier que    la
+lecture   foNctionne     bien NEGGER
