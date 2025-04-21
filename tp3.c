@@ -150,9 +150,11 @@ t_mot *importerFichier(t_mot *liste) {
 
     char *mot;
     while ((mot = lireMot(f)) != NULL) {
-        liste = ajouterMot(liste, mot);
+        nettoyerMot(mot); 
+        liste = ajouterMot(liste, convertir_minuscule(mot));
         free(mot);
     }
+    
 
     fclose(f);
     return liste;
