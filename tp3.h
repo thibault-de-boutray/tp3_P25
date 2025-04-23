@@ -12,6 +12,8 @@ typedef struct t_mot {
     struct t_mot *suivant;
 } t_mot;
 
+
+
 t_mot *creerMot(char *mot);
 t_mot *ajouterMot(t_mot *liste, char *mot);
 t_mot *retirerMot(t_mot *liste, char *mot);
@@ -21,5 +23,8 @@ t_mot *importerFichier(t_mot *liste);
 char *lireMot(FILE *f);
 char *convertir_minuscule(char *mot);
 void viderBuffer(void);
-
+char *nettoyerMot(char *mot);
+int choisirLexique(int nbLexiques);
+int choisirLexique(int nbLexiques);
+void libererTousLexiques(t_mot **lexiques, int nbLexiques);
 #endif
