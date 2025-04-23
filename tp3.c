@@ -27,6 +27,9 @@ t_mot *creerMot(char *mot) {
 
 // Ajoute un mot dans la liste triée
 t_mot *ajouterMot(t_mot *liste, char *mot) {
+    nettoyerMot(mot);
+    convertir_minuscule(mot);
+    if (strlen(mot) == 0) return liste;
     if (liste == NULL) {
         return creerMot(mot);
     }
@@ -48,7 +51,6 @@ t_mot *ajouterMot(t_mot *liste, char *mot) {
     if (nouveauMot == NULL) return liste;
 
     if (prec == NULL) {
-        // Insertion en tête
         nouveauMot->suivant = liste;
         return nouveauMot;
     } else {
@@ -60,6 +62,13 @@ t_mot *ajouterMot(t_mot *liste, char *mot) {
 
 // Retire un mot
 t_mot *retirerMot(t_mot *liste, char *mot) {
+    nettoyerMot(mot);
+    convertir_minuscule(mot);
+    if (strlen(mot) == 0) {
+        printf("Mot invalide.\n");
+        return liste;
+    }
+
     if (liste == NULL) {
         printf("La liste est vide.\n");
         return NULL;
@@ -81,7 +90,6 @@ t_mot *retirerMot(t_mot *liste, char *mot) {
     if (buffer->nombre_occurences > 1) {
         buffer->nombre_occurences--;
     } else {
-        // Suppression complète
         if (prec == NULL) {
             liste = buffer->suivant;
         } else {
@@ -94,22 +102,24 @@ t_mot *retirerMot(t_mot *liste, char *mot) {
     printf("Mot \"%s\" supprimé.\n", mot);
     return liste;
 }
-
-
-// Affiche tous les mots
-void afficherMots(t_mot *liste) {
+// afficher mots
+void afficherMots(t_mot *liste){
     if (liste == NULL) {
-        printf("Le lexique est vide\n");
+        printf("Le lexique est vide.\n");
         return;
     }
-
-    t_mot *buffer = liste;
-    while (buffer != NULL) {
-        printf("\n%c --- %s [%d]", toupper(buffer->mot[0]), buffer->mot, buffer->nombre_occurences);
-        buffer = buffer->suivant;
+    char lettre = '0';
+    while (liste != NULL) {
+        if (liste->mot[0] != lettre) {
+            lettre = liste->mot[0];
+            printf("%c ", toupper(lettre));
+        }
+        else printf("  ");
+        printf("--- %s[%d]\n", liste->mot, liste->nombre_occurences);
+        liste = liste->suivant;
     }
-    printf("\n");
 }
+
 
 // Fusionne deux listes triées
 t_mot *fusionner(t_mot *listeA, t_mot *listeB) {
@@ -117,14 +127,14 @@ t_mot *fusionner(t_mot *listeA, t_mot *listeB) {
     if (listeB == NULL) return listeA;
 
     if (strcmp(listeA->mot, listeB->mot) == 0) {
-        listeA->nombre_occurences += listeB->nombre_occurences;
+           listeA->nombre_occurences += listeB->nombre_occurences;
         listeA->suivant = fusionner(listeA->suivant, listeB->suivant);
         free(listeB->mot);
         free(listeB);
-        return listeA; //si ils sont égaux on renvoie arbitrairement l'élément A et on libere l'elemùent b
+        return listeA;
     }
 
-    if (strcmp(listeA->mot, listeB->mot) < 0) { //si l'élément A est plus petit que l'element B c'eest à dire que le mot A est placé avant l'élément b dans l'ordre alphabétique on ajoute l'élement A sinon l'inverse
+    if (strcmp(listeA->mot, listeB->mot) < 0) {
         listeA->suivant = fusionner(listeA->suivant, listeB);
         return listeA;
     } else {
@@ -150,11 +160,9 @@ t_mot *importerFichier(t_mot *liste) {
 
     char *mot;
     while ((mot = lireMot(f)) != NULL) {
-        nettoyerMot(mot); 
-        liste = ajouterMot(liste, convertir_minuscule(mot));
+        liste = ajouterMot(liste, mot);
         free(mot);
     }
-    
 
     fclose(f);
     return liste;
@@ -175,7 +183,7 @@ char *lireMot(FILE *f) {
         return NULL;
     }
 
-    do {
+    while (c != EOF && !isspace(c)) {
         mot[i++] = c;
         if (i >= taille) {
             taille *= 2;
@@ -187,16 +195,16 @@ char *lireMot(FILE *f) {
             mot = temp;
         }
         c = fgetc(f);
-    } while (c != EOF && !isspace(c));
+    } 
 
     mot[i] = '\0';
-    return convertir_minuscule(mot);
+    return mot;
 }
 
 // Convertit un mot en minuscules
 char *convertir_minuscule(char *mot) {
     for (int i = 0; mot[i] != '\0'; i++) {
-        mot[i] = tolower(mot[i]);
+        mot[i] = tolower((unsigned char)mot[i]);
     }
     return mot;
 }
@@ -205,4 +213,50 @@ char *convertir_minuscule(char *mot) {
 void viderBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
+}
+
+char *nettoyerMot(char *mot) {
+    int i = 0, j = 0;
+    unsigned char c;
+    
+    while (mot[i] != '\0') {
+        c = (unsigned char)mot[i];
+        if (isalpha(c) || (c >= 192 && c <= 255)) {  
+            mot[j++] = mot[i];  
+        }
+        i++;
+    }
+    mot[j] = '\0';
+    return mot;
+}
+
+
+void libererLexique(t_mot *liste) {
+    t_mot *tmp;
+    while (liste != NULL) {
+        tmp = liste;
+        liste = liste->suivant;
+        free(tmp->mot);
+        free(tmp);
+    }
+}
+
+void libererTousLexiques(t_mot **lexiques, int nbLexiques) {
+    for (int i = 0; i < nbLexiques; i++) {
+        libererLexique(lexiques[i]);
+    }
+    free(lexiques);
+}
+
+int choisirLexique(int nbLexiques) {
+    int choix=0;   // erreur oublie de remetre l'initialisation de choix à 0 qui fait que la fonction choix ne fonctionne pas int choix=0; normalement
+    while (choix < 1 || choix > nbLexiques) {
+        printf("\nChoisissez le lexique (1 à %d) : ", nbLexiques);
+        scanf("%d", &choix);
+        viderBuffer();
+        if (choix < 1 || choix > nbLexiques) {
+            printf("Choix invalide : '%d'. Veuillez entrer un nombre entre 1 et %d.\n", choix, nbLexiques);
+        }
+    }
+    return choix - 1; 
 }
